@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Login</title>
+    <script>
+        function checkPasswordStrenght(pas) {
+            let types = /[a-z]/.test(pas) +
+                        /[A-Z]/.test(pas) +
+                        /[0-9]/.test(pas) +
+                        /[^a-zA-Z0-9]/.test(pas);
+           return types >= 2  && pas.length >= 10;
+        }
+
+
+
+        function handleLogin(is_login) {
+            document.getElementById("login-button").disabled = true;
+            document.getElementById("signup-button").disabled = true;
+
+            (() => {
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+
+            let missingFields = document.getElementById('missing-fields');
+            let passwordStrength = document.getElementById('password-strength');
+            let error = document.getElementById('error');
+
+            missingFields.hidden = true;
+            passwordStrength.hidden = true;
+            error.hidden = true;
+
+
+            if (username === '' || password === '') {
+                missingFields.hidden = false;
+                return;
+            }
+
+            if (!checkPasswordStrenght(password)) {
+                passwordStrength.hidden = false;
+                return;
+            }
+            let request = {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    username: username,
+                    password: password,
+                    isLogin: is_login
+                })
+            };
+            fetch('/login', request)
+                .then(response => {
+                    if (response.ok) {
+                        return response.json();
+                    } else {
+                        error.hidden = true;
+                        error.textContent = response.message || 'An error occurred during login or sign up.';
+                    }
+                })
+                .then(data => {
+                    if (data.success) {
+                        window.location.href = '/management';
+                    } else {
+                        error.hidden = false;
+                        error.textContent = data.message || 'An error occurred during login or sign up.';
+                    }
+                })
+                .catch(error => {
+                    console.error('There was a problem with the fetch operation:', error);
+                });})(is_login);
+            document.getElementById("login-button").disabled = false;
+            document.getElementById("signup-button").disabled = false;
+
+        }
+
+
+    </script>
+</head>
+<body>
+    <h1>Login</h1>
+    <form action="/login" method="post">
+        <label for="username">Username:</label>
+        <input type="text" id="username" name="username" required>
+        <br>
+        <label for="password">Password:</label>
+        <input type="password" id="password" name="password" required>
+        <br>
+        <button type="button" onclick=handleLogin(true)  id="login-button">Login</button>
+        <button type="button" onclick=handleLogin(false) id="signup-button">Sign Up</button>
+        <br>
+        <br>
+        <b style="color: red;" hidden id="missing-fields">Please fill in username and password</b>
+        <b style="color: red;" hidden id="password-strength">
+            Your password must be at least 10 characters long and must contain at least 2 of the following sets:<br>
+            <ul>
+                <li>Lowercase letters</li>
+                <li>Uppercase letters</li>
+                <li>Numbers</li>
+                <li>Special characters (e.g., !@#$%^&*)</li>
+            </ul>
+        </b>
+        <b style="color: red;" hidden id="error"></b>
+    </form>
+</body>
+</html>
